@@ -89,6 +89,6 @@ mix test
 Run tests excluding the ones that require a database connection:
 ```
 mix test --exclude db
-``
+```
 
 Make a Pull Request.
