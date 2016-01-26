@@ -3,7 +3,7 @@ defmodule ExOrient.Mixfile do
 
   def project do
     [app: :ex_orient,
-     version: "0.1.1",
+     version: "0.1.2",
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -34,8 +34,8 @@ defmodule ExOrient.Mixfile do
   defp deps do
     [
       {:marco_polo, "~> 0.1"},
-      {:poison, "~> 2.0"},
-      {:poolboy, "~> 1.5"},
+      {:poison, "~> 1.5 or ~> 2.0"},
+      {:poolboy, "~> 1.5 or ~> 1.4"},
       {:earmark, "~> 0.1", only: :dev},
       {:ex_doc, "~> 0.11", only: :dev}
     ]
