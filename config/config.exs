@@ -28,3 +28,10 @@ use Mix.Config
 # here (which is why it is important to import them last).
 #
 #     import_config "#{Mix.env}.exs"
+
+config :ex_orient,
+  pool_size: 5,
+  pool_max_overflow: 10,
+  user: "admin",
+  password: "admin",
+  connection: {:db, "GratefulDeadConcerts", :document}

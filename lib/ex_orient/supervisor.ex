@@ -9,14 +9,22 @@ defmodule ExOrient.Supervisor do
     pool_options = [
       name: {:local, :marco_polo},
       worker_module: MarcoPolo,
-      size: 5,
-      max_overflow: 10
+      size: pool_size(),
+      max_overflow: pool_max_overflow()
     ]
 
+    args = [user: user(), password: password(), connection: connection()]
+
     children = [
-      :poolboy.child_spec(:marco_polo, pool_options, [user: "admin", password: "admin", connection: {:db, "GratefulDeadConcerts", :document}])
+      :poolboy.child_spec(:marco_polo, pool_options, args)
     ]
 
     supervise(children, strategy: :one_for_one)
   end
+
+  defp pool_size, do: Application.get_env(:ex_orient, :pool_size)
+  defp pool_max_overflow, do: Application.get_env(:ex_orient, :pool_max_overflow)
+  defp user, do: Application.get_env(:ex_orient, :user)
+  defp password, do: Application.get_env(:ex_orient, :password)
+  defp connection, do: Application.get_env(:ex_orient, :connection)
 end
