@@ -1,0 +1,5 @@
+%{"connection": {:hex, :connection, "1.0.0-rc.1"},
+  "decimal": {:hex, :decimal, "1.1.1"},
+  "marco_polo": {:hex, :marco_polo, "0.2.1"},
+  "poison": {:hex, :poison, "2.0.1"},
+  "poolboy": {:hex, :poolboy, "1.5.1"}}
