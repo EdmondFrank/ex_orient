@@ -3,7 +3,7 @@ defmodule ExOrient.Mixfile do
 
   def project do
     [app: :ex_orient,
-     version: "0.1.0",
+     version: "0.1.1",
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -53,8 +53,8 @@ defmodule ExOrient.Mixfile do
       maintainers: ["Paul Dilyard"],
       licenses: ["MIT"],
       links: %{
-        "Github" => "https://github.com/Remesh/ex_orient",
-        "Docs" => "http://hexdocs.pm/ex_orient"
+        "Github" => "https://github.com/Remesh/ex_orient/",
+        "Docs" => "http://hexdocs.pm/ex_orient/"
       }
     ]
   end
