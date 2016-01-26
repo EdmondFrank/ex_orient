@@ -1,6 +1,7 @@
 defmodule ExOrient.QueryBuilder do
   @moduledoc """
-  Logic for building query strings to be used in DB commands.
+  Logic for building query strings to be used in DB commands. This is used in
+  `ExOrient.DB` function calls.
   """
 
   alias MarcoPolo.RID

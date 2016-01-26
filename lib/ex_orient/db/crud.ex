@@ -9,14 +9,21 @@ defmodule ExOrient.DB.CRUD do
   @doc """
   Perform a select operation. Examples:
 
-      ExOrient.DB.select(from: ProgrammingLanguage)
-      ExOrient.DB.select([:name], from: {ProgrammingLanguage})
-      ExOrient.DB.select(from: ProgrammingLanguage, where: %{name: "Elixir"})
-      ExOrient.DB.select(from: ProgrammingLanguage, where: %{name: "Elixir", type: "Awesome"})
-      ExOrient.DB.select(from: ProgrammingLanguage, where: %{name: "Elixir", type: "Awesome"}, logical: "OR")
-      ExOrient.DB.select(from: ProgrammingLanguage, where: %{"name.toLowerCase()" => "lolcode"})
-      ExOrient.DB.select(from: ProgrammingLanguage, where: {"name.length()", ">", 10})
-      ExOrient.DB.select(from: ProgrammingLanguage,
+      > ExOrient.DB.select(from: ProgrammingLanguage)
+
+      > ExOrient.DB.select([:name], from: {ProgrammingLanguage})
+
+      > ExOrient.DB.select(from: ProgrammingLanguage, where: %{name: "Elixir"})
+
+      > ExOrient.DB.select(from: ProgrammingLanguage, where: %{name: "Elixir", type: "Awesome"})
+
+      > ExOrient.DB.select(from: ProgrammingLanguage, where: %{name: "Elixir", type: "Awesome"}, logical: "OR")
+
+      > ExOrient.DB.select(from: ProgrammingLanguage, where: %{"name.toLowerCase()" => "lolcode"})
+
+      > ExOrient.DB.select(from: ProgrammingLanguage, where: {"name.length()", ">", 10})
+
+      > ExOrient.DB.select(from: ProgrammingLanguage,
                        where: [{"name.length()", ">", 10},
                                {"name.left(2)", "=", "El"}],
                        logical: "OR")
@@ -261,7 +268,10 @@ defmodule ExOrient.DB.CRUD do
   @doc """
   Run a delete command. Examples:
 
-      >
+      > DB.delete(from: "#10:0")
+
+      > DB.delete(from: ProgrammingLanguage)
+
   """
   def delete(opts \\ []) do
     from =

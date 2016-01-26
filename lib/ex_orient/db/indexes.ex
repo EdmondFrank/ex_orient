@@ -43,6 +43,9 @@ defmodule ExOrient.DB.Indexes do
 
   @doc """
   Rebuild an index by name
+
+      > ExOrient.DB.rebuild(index: "name")
+
   """
   def rebuild(opts \\ []) do
     name = Keyword.get(opts, :index)
@@ -52,6 +55,9 @@ defmodule ExOrient.DB.Indexes do
 
   @doc """
   Drop an index by name or property
+
+      > ExOrient.DB.drop(index: "name")
+
   """
   def drop(opts \\ []) do
     name = Keyword.get(opts, :index)

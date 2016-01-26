@@ -104,7 +104,12 @@ defmodule ExOrient.DB.Graph do
   @doc """
   Run a delete vertex or edge command. Examples:
 
-      >
+      > DB.delete(vertex: "V", where: %{make: "Ford"})
+      8
+
+      > DB.delete(edge: "E", where: %{type: "Truck"})
+      3
+
   """
   def delete(opts \\ []) do
     query = "DELETE"
