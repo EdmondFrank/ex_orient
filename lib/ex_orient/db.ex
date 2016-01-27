@@ -26,8 +26,11 @@ defmodule ExOrient.DB do
   def command(query), do: command(query, params: [])
   def command(query, params: params) do
     :poolboy.transaction(:marco_polo, fn(worker) ->
-      {:ok, %{response: response}} = MarcoPolo.command(worker, query, params: params)
-      response
+      case MarcoPolo.command(worker, query, params: params) do
+        {:ok, %{response: response}} -> {:ok, response}
+        {:error, error} -> {:error, error}
+        _ -> {:error, "Something went badly wrong."}
+      end
     end)
   end
 
