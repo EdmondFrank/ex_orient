@@ -13,7 +13,13 @@ defmodule ExOrient.Supervisor do
       max_overflow: pool_max_overflow()
     ]
 
-    args = [user: user(), password: password(), connection: connection()]
+    args = [
+      user: user(),
+      password: password(),
+      connection: connection(),
+      host: host(),
+      port: port()
+    ]
 
     children = [
       :poolboy.child_spec(:marco_polo, pool_options, args)
@@ -27,4 +33,6 @@ defmodule ExOrient.Supervisor do
   defp user, do: Application.get_env(:ex_orient, :user)
   defp password, do: Application.get_env(:ex_orient, :password)
   defp connection, do: Application.get_env(:ex_orient, :connection)
+  defp host, do: Application.get_env(:ex_orient, :host)
+  defp port, do: Application.get_env(:ex_orient, :port)
 end
