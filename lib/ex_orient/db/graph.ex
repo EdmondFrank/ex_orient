@@ -3,17 +3,14 @@ defmodule ExOrient.DB.Graph do
   Provides Graph commands
   """
 
-  alias ExOrient.DB
   alias ExOrient.QueryBuilder, as: QB
 
   @doc """
   Create a vertex or edge. Examples:
 
-      > ExOrient.DB.create_vertex(vertex: "V", set: [name: "Steve"])
-      %MarcoPolo.Document{class: "V", fields: %{"name" => "Steve"}, rid: _, version: _}
+      ExOrient.DB.create_vertex(vertex: "V", set: [name: "Steve"])
 
-      > ExOrient.DB.create_vertex(vertex: "V", content: %{name: "Bob"})
-      %MarcoPolo.Document{class: "V", fields: %{"name" => "Bob"}, rid: _, version: _}
+      ExOrient.DB.create_vertex(vertex: "V", content: %{name: "Bob"})
 
   """
   def create_vertex(opts \\ []) do
@@ -39,15 +36,13 @@ defmodule ExOrient.DB.Graph do
       |> Keyword.get(:content)
       |> QB.append_content(query, params)
 
-    DB.command(query, params: params)
+    {query, params}
   end
 
   @doc """
   Create an edge. Examples:
 
-      > ExOrient.DB.create(edge: "E", from: "#15:5", to: "#15:6", content: %{name: "Hello"})
-      [%MarcoPolo.Document{class: "E", fields: %{"in" => #MarcoPolo.RID<#15:6>,
-      "name" => "Hello", "out" => #MarcoPolo.RID<#15:5>}, rid: _, version: _}]
+      ExOrient.DB.create(edge: "E", from: "#15:5", to: "#15:6", content: %{name: "Hello"})
 
   """
   def create_edge(opts \\ []) do
@@ -98,17 +93,15 @@ defmodule ExOrient.DB.Graph do
       |> Keyword.get(:batch)
       |> QB.append_batch(query, params)
 
-    DB.command(query, params: params)
+    {query, params}
   end
 
   @doc """
   Run a delete vertex or edge command. Examples:
 
-      > DB.delete(vertex: "V", where: %{make: "Ford"})
-      8
+      DB.delete(vertex: "V", where: %{make: "Ford"})
 
-      > DB.delete(edge: "E", where: %{type: "Truck"})
-      3
+      DB.delete(edge: "E", where: %{type: "Truck"})
 
   """
   def delete(opts \\ []) do
@@ -139,6 +132,6 @@ defmodule ExOrient.DB.Graph do
       |> Keyword.get(:batch)
       |> QB.append_batch(query, params)
 
-    DB.command(query, params: params)
+    {query, params}
   end
 end

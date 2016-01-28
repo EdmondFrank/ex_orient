@@ -27,8 +27,12 @@ defmodule ExOrient.QueryBuilderTest do
   end
 
   test "append where" do
-    result = {"SELECT FROM Test WHERE name = :where_name AND type = :where_type", %{"where_name" => "Elixir", "where_type" => "Awesome"}}
-    assert result == QueryBuilder.append_where(%{name: "Elixir", type: "Awesome"}, "SELECT FROM Test", %{})
+    {query, _} = QueryBuilder.append_where(%{name: "Elixir", type: "Awesome"}, "SELECT FROM Test", %{})
+    assert query =~ "SELECT FROM Test"
+    assert query =~ "WHERE"
+    assert query =~ "name"
+    assert query =~ "AND"
+    assert query =~ "type"
   end
 
   test "append group by" do
@@ -185,5 +189,9 @@ defmodule ExOrient.QueryBuilderTest do
 
   test "append polymorphic" do
     assert {"TRUNCATE CLASS Test POLYMORPHIC", %{}} = QueryBuilder.append_polymorphic(true, "TRUNCATE CLASS Test", %{})
+  end
+
+  test "append force" do
+    assert {"DROP PROPERTY Test.name FORCE", %{}} = QueryBuilder.append_force(true, "DROP PROPERTY Test.name", %{})
   end
 end

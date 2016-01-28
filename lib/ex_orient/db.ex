@@ -13,16 +13,16 @@ defmodule ExOrient.DB do
   @doc """
   Execute a raw query with MarcoPolo and return the response.
 
-      > ExOrient.DB.command("SELECT FROM ProgrammingLanguage")
-      [%MarcoPolo.Document{class: "ProgrammingLanguage", fields: _, rid: _, version: _} | _rest]
+      ExOrient.DB.command("SELECT FROM ProgrammingLanguage")
+      # [%MarcoPolo.Document{class: "ProgrammingLanguage", fields: _, rid: _, version: _} | _rest]
 
-  All other functions in this module use this command to execute. Only use
-  this function directly if you need the power of a raw query. Be sure to use
-  the params argument if you need to bind variables:
+  Only use this function directly if you need the power of a raw query. Be sure
+  to use the params argument if you need to bind variables:
 
-      > ExOrient.DB.command("SELECT FROM ProgrammingLanguage WHERE name = :name", params: %{name: "Elixir"})
+      ExOrient.DB.command("SELECT FROM ProgrammingLanguage WHERE name = :name", params: %{name: "Elixir"})
 
   """
+  def command({query, params}), do: command(query, params: params)
   def command(query), do: command(query, params: [])
   def command(query, params: params) do
     :poolboy.transaction(:marco_polo, fn(worker) ->
@@ -33,6 +33,11 @@ defmodule ExOrient.DB do
       end
     end)
   end
+
+  @doc """
+  An alias for command/1
+  """
+  def exec({query, params}), do: command(query, params: params)
 
   defdelegate select(field), to: CRUD
   defdelegate select(field, opts), to: CRUD

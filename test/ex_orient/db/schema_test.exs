@@ -1,49 +1,34 @@
 defmodule ExOrient.DB.SchemaTest do
   use ExUnit.Case
-
   alias ExOrient.DB
 
-  @tag :db
   test "create class" do
-    assert 0 < DB.create(class: SchemaTestClass, extends: "E", abstract: true)
-    DB.drop(class: SchemaTestClass)
+    {query, _} = DB.create(class: Test, extends: "E", abstract: true)
+    assert query == "CREATE CLASS Test EXTENDS E ABSTRACT"
   end
 
-  @tag :db
   test "alter class" do
-    DB.create(class: SchemaTestClass, extends: "E")
-    assert nil == DB.alter(class: SchemaTestClass, attr: "SUPERCLASS -E")
-    DB.drop(class: SchemaTestClass)
+    {query, _} = DB.alter(class: Test, attr: "SUPERCLASS -E")
+    assert query == "ALTER CLASS Test SUPERCLASS -E"
   end
 
-  @tag :db
   test "drop class" do
-    DB.create(class: SchemaTestClass, extends: "E")
-    assert true == DB.drop(class: SchemaTestClass)
+    {query, _} = DB.drop(class: Test)
+    assert query == "DROP CLASS Test"
   end
 
-  @tag :db
   test "create property" do
-    DB.create(class: SchemaTestClass, extends: "E")
-    assert 1 == DB.create(property: "SchemaTestClass.name", type: :string, unsafe: true)
-    DB.drop(property: "SchemaTestClass.name")
-    DB.drop(class: SchemaTestClass)
+    {query, _} = DB.create(property: "Test.name", type: :string, unsafe: true)
+    assert query == "CREATE PROPERTY Test.name STRING UNSAFE"
   end
 
-  @tag :db
   test "alter property" do
-    DB.create(class: SchemaTestClass, extends: "E")
-    DB.create(property: "SchemaTestClass.name", type: :string)
-    assert nil == DB.alter(property: "SchemaTestClass.name", attr: "REGEXP [M|F]")
-    DB.drop(property: "SchemaTestClass.name")
-    DB.drop(class: SchemaTestClass)
+    {query, _} = DB.alter(property: "Test.name", attr: "REGEXP [M|F]")
+    assert query == "ALTER PROPERTY Test.name REGEXP [M|F]"
   end
 
-  @tag :db
   test "drop property" do
-    DB.create(class: SchemaTestClass, extends: "E")
-    DB.create(property: "SchemaTestClass.name", type: :string)
-    assert nil == DB.drop(property: "SchemaTestClass.name")
-    DB.drop(class: SchemaTestClass)
+    {query, _} = DB.drop(property: "Test.name")
+    assert query == "DROP PROPERTY Test.name"
   end
 end

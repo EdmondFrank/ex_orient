@@ -57,6 +57,18 @@ defmodule ExOrient.QueryBuilder do
   def to_list(single), do: [single]
 
   @doc """
+  Put some parameters into a query string. We try not to use this if we don't
+  have to.
+  """
+  def combine_params(query, params) do
+    params
+    |> Enum.to_list()
+    |> Enum.reduce(query, fn({key, value}, acc) ->
+      String.replace(acc, ":#{key}", value)
+    end)
+  end
+
+  @doc """
   Add a let block to a query for a given `map`.
 
       iex> ExOrient.QueryBuilder.append_let(%{"$n" => :name}, "SELECT FROM Test", %{})
@@ -64,37 +76,29 @@ defmodule ExOrient.QueryBuilder do
 
   """
   def append_let(nil, query, params), do: {query, params}
+
   def append_let(map, query, params) do
     block = map
     |> Map.to_list()
-    |> Enum.map(fn({var, field}) -> "#{var} = #{field}" end)
+    |> Enum.map(fn
+        ({var, {sub_query, sub_params}}) -> "#{var} = (#{combine_params(sub_query, sub_params)})"
+        ({var, field}) -> "#{var} = #{field}"
+      end)
     |> Enum.join(", ")
 
     {query <> " LET #{block}", params}
   end
 
   @doc """
-  Append a where clause based on a map, 3-elem tuple, or list of 3-elem tuples.
-  Maps and single tuples are both converted to lists of 3-elem tuples and passed
-  down the line. You can also specify a logical operator, such as "OR". "AND" is
-  used by default if you have multiple fields in your where clause. If you're
-  doing anything more complicated, you can also pass a string to use directly
-  as the WHERE clause, although this is not preferred.
-
-      iex> ExOrient.QueryBuilder.append_where(%{name: "Elixir"}, "SELECT FROM Test", %{})
-      {"SELECT FROM Test WHERE name = :where_name", %{"where_name" => "Elixir"}}
-
-      iex> ExOrient.QueryBuilder.append_where({:name, "=", "Elixir"}, "SELECT FROM Test", %{})
-      {"SELECT FROM Test WHERE name = :where_name", %{"where_name" => "Elixir"}}
-
-      iex> ExOrient.QueryBuilder.append_where([{:name, "=", "Elixir"}, {:type, "=", "Awesome"}], "OR", "SELECT FROM Test", %{})
-      {"SELECT FROM Test WHERE name = :where_name OR type = :where_type", %{"where_name" => "Elixir", "where_type" => "Awesome"}}
-
-      iex> ExOrient.QueryBuilder.append_where("name = :name", "SELECT FROM Test", %{name: "Elixir"})
-      {"SELECT FROM Test WHERE name = :name", %{name: "Elixir"}}
-
+  Append a where clause based on a map, keyword list, 3-elem tuple, or list of
+  3-elem tuples. Maps, keyword lists, single tuples are all converted to lists
+  of 3-elem tuples and passed down the line. You can also specify a logical
+  operator, such as `:or`. `:and` is used by default if you have multiple fields
+  in your where clause. If you're doing anything more complicated, you can also
+  pass a string to use directly as the WHERE clause, although this is not
+  preferred.
   """
-  def append_where(clause_or_map, logical \\ "AND", query, params)
+  def append_where(clause_or_map, logical \\ :and, query, params)
 
   def append_where(nil, _logical, query, params) do
     {query, params}
@@ -115,29 +119,44 @@ defmodule ExOrient.QueryBuilder do
     append_where([clause], logical, query, params)
   end
 
-  def append_where(clauses, logical, query, params) do
+  # For a keyword list: [name: "Paul", name: "Bob"]
+  def append_where(clauses = [{_key, _val} | _rest], logical, query, params) do
+    clauses
+    |> Enum.map(fn({key, value}) -> {to_string(key), "=", value} end)
+    |> append_where(logical, query, params)
+  end
+
+  # For the finally built list of clauses: [{"name", "=", "Paul"}, {"name", "=", "Bob"}]
+  def append_where(clauses = [{_key, _op, _val} | _rest], logical, query, params) do
+    # First, we build up a tuple like this:
+    # {"name = :where_name_0", "where_name_0", "Paul"}
     clauses_keys_vals =
       clauses
-      |> Enum.map(fn({key, oper, value}) ->
+      |> Enum.with_index(:random.uniform * 1000 |> round())
+      |> Enum.map(fn({{key, oper, value}, index}) ->
         case key do
-          "@" <> rec_attr -> {"#{key} #{oper} :where_#{rec_attr}", rec_attr, value}
-          "$" <> var -> {"#{key} #{oper} :where_#{var}", var, value}
+          "@" <> rec_attr -> {"#{key} #{oper} :where_#{rec_attr}_#{index}", "where_#{rec_attr}_#{index}", value}
+          "$" <> var -> {"#{key} #{oper} :where_#{var}_#{index}", "where_#{var}_#{index}", value}
           _ ->
             var = key |> to_string() |> String.split(".") |> Enum.at(0) # Support prop.toLowerCase()
-            {"#{key} #{oper} :where_#{var}", var, value}
+            {"#{key} #{oper} :where_#{var}_#{index}", "where_#{var}_#{index}", value}
         end
       end)
 
+    # Pull out the map of keys => values
+    # %{"where_name_0" => "Paul"}
     map =
       clauses_keys_vals
-      |> Enum.map(fn({_clause, key, val}) -> {"where_#{key}", val} end)
+      |> Enum.map(fn({_clause, key, val}) -> {key, val} end)
       |> Enum.into(%{})
       |> Map.merge(params)
 
+    # Join all the clauses together
+    # "name = :where_name_0 AND age = :where_age_1"
     clause =
       clauses_keys_vals
       |> Enum.map(fn({clause, _key, _val}) -> clause end)
-      |> Enum.join(" #{logical} ")
+      |> Enum.join(" #{logical |> to_string() |> String.upcase()} ")
 
     {query <> " WHERE #{clause}", map}
   end
@@ -324,8 +343,10 @@ defmodule ExOrient.QueryBuilder do
   def append_set(kv, query, params) do
     sets =
       kv
-      |> Keyword.keys()
-      |> Enum.map(fn(key) -> "#{key} = :set_#{key}" end)
+      |> Enum.map(fn
+        ({key, {q, p}}) -> "#{key} = (#{combine_params(q, p)})"
+        ({key, _val}) -> "#{key} = :set_#{key}"
+      end)
       |> Enum.join(", ")
 
     map =
@@ -372,6 +393,10 @@ defmodule ExOrient.QueryBuilder do
 
   """
   def append_from(nil, query, params), do: {query, params}
+
+  def append_from({sub_query, sub_params}, query, params) do
+    {query <> " FROM (#{sub_query})", Map.merge(sub_params, params)}
+  end
 
   def append_from(rid = %RID{}, query, params) do
     append_from(class_name(rid), query, params)
@@ -531,6 +556,10 @@ defmodule ExOrient.QueryBuilder do
   """
   def append_to(nil, query, params), do: {query, params}
 
+  def append_to({sub_query, sub_params}, query, params) do
+    {query <> " TO (#{sub_query})", Map.merge(sub_params, params)}
+  end
+
   def append_to(rid = %RID{}, query, params) do
     append_to(class_name(rid), query, params)
   end
@@ -671,4 +700,15 @@ defmodule ExOrient.QueryBuilder do
   def append_polymorphic(nil, query, params), do: {query, params}
   def append_polymorphic(true, query, params), do: {query <> " POLYMORPHIC", params}
   def append_polymorphic(false, query, params), do: {query, params}
+
+  @doc """
+  Append force
+
+      iex> ExOrient.QueryBuilder.append_force(true, "DROP PROPERTY Person.name", %{})
+      {"DROP PROPERTY Person.name FORCE", %{}}
+
+  """
+  def append_force(nil, query, params), do: {query, params}
+  def append_force(true, query, params), do: {query <> " FORCE", params}
+  def append_force(false, query, params), do: {query, params}
 end

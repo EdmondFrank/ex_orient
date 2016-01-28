@@ -2,29 +2,18 @@ defmodule ExOrient.DB.IndexesTest do
   use ExUnit.Case
   alias ExOrient.DB
 
-  setup do
-    DB.create(class: IndexesTest)
-    DB.create(property: "IndexesTest.name", type: :string)
-    on_exit(fn ->
-      DB.drop(class: IndexesTest)
-    end)
-  end
-
-  @tag :db
   test "create an index" do
-    DB.create(index: "name", on: "IndexesTest (name)", index_type: :unique, key_type: :string)
-    DB.drop(index: "name")
+    {query, _} = DB.create(index: "name", on: "IndexesTest (name)", index_type: :unique, key_type: :string)
+    assert query == "CREATE INDEX name ON IndexesTest (name) UNIQUE STRING"
   end
 
-  @tag :db
   test "rebuild an index" do
-    DB.create(index: "name", on: "IndexesTest (name)", index_type: :unique, key_type: :string)
-    DB.rebuild(index: "name")
-    DB.drop(index: "name")
+    {query, _} = DB.rebuild(index: "name")
+    assert query == "REBUILD INDEX name"
   end
 
-  @tag :db
   test "drop an index" do
-    DB.drop(index: "name")
+    {query, _} = DB.drop(index: "name")
+    assert query == "DROP INDEX name"
   end
 end

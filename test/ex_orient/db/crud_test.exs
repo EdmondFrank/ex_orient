@@ -1,281 +1,237 @@
 defmodule ExOrient.DB.CRUDTest do
   use ExUnit.Case
-  alias MarcoPolo.Document
   alias ExOrient.DB
 
-  setup_all do
-    DB.insert(into: ProgrammingLanguage, content: %{name: "Elixir"})
-    DB.insert(into: ProgrammingLanguage, content: %{name: "Elixir", type: "Awesome"})
-    DB.insert(into: ProgrammingLanguage, content: %{name: "C", type: "Fast"})
-    DB.insert(into: ProgrammingLanguage, content: %{name: "LOLCODE", type: "Humor"})
-    DB.insert(into: ProgrammingLanguage, content: %{name: "this_is_more_than_ten"})
-
-    on_exit(fn ->
-      DB.delete(from: ProgrammingLanguage)
-    end)
-    :ok
-  end
-
-  @tag :db
   test "insert with values syntax" do
-    doc = DB.insert(into: ProgrammingLanguage, values: {[:name, :type], ["Elixir", "Awesome"]})
-    assert %Document{
-      class: "ProgrammingLanguage",
-      rid: _,
-      version: _,
-      fields: %{"name" => "Elixir", "type" => "Awesome"}
-    } = doc
+    expected = {"INSERT INTO Test (name, type) VALUES (:values_name, :values_type)", %{"values_name" => "Elixir", "values_type" => "Awesome"}}
+    actual = DB.insert(into: Test, values: {[:name, :type], ["Elixir", "Awesome"]})
+    assert expected == actual
   end
 
-  @tag :db
   test "insert with set syntax" do
-    doc = DB.insert(into: ProgrammingLanguage, set: [name: "Elixir", type: "Awesome"])
-    assert %Document{
-      class: "ProgrammingLanguage",
-      rid: _,
-      version: _,
-      fields: %{"name" => "Elixir", "type" => "Awesome"}
-    } = doc
+    expected = {"INSERT INTO Test SET name = :set_name, type = :set_type", %{"set_name" => "Elixir", "set_type" => "Awesome"}}
+    actual = DB.insert(into: Test, set: [name: "Elixir", type: "Awesome"])
+    assert expected == actual
   end
 
-  @tag :db
   test "insert with content syntax" do
-    doc = DB.insert(into: ProgrammingLanguage, content: %{name: "Elixir", meta: %{emotion: "Fun", type: "Awesome"}})
-    assert %Document{
-      class: "ProgrammingLanguage",
-      rid: _,
-      version: _,
-      fields: %{"name" => "Elixir", "meta" => %{"emotion" => "Fun", "type" => "Awesome"}}
-    } = doc
+    expected = {"INSERT INTO Test CONTENT {\"name\":\"Elixir\",\"meta\":{\"type\":\"Awesome\",\"emotion\":\"Fun\"}}", %{}}
+    actual = DB.insert(into: Test, content: %{name: "Elixir", meta: %{emotion: "Fun", type: "Awesome"}})
+    assert expected == actual
   end
 
-  @tag :db
   test "basic select" do
-    docs = DB.select(from: ProgrammingLanguage)
-    assert is_list(docs) and length(docs) > 0
-    assert %Document{
-      class: "ProgrammingLanguage",
-      rid: _,
-      version: _,
-      fields: %{"name" => _}
-    } = hd(docs)
+    expected = {"SELECT FROM Test", %{}}
+    actual = DB.select(from: Test)
+    assert expected == actual
   end
 
-  @tag :db
   test "select with fields" do
-    docs = DB.select([:name], from: ProgrammingLanguage)
-    assert is_list(docs) and length(docs) > 0
-    assert %Document{
-      class: _,
-      rid: _,
-      version: _,
-      fields: %{"name" => _}
-    } = hd(docs)
+    expected = {"SELECT name FROM Test", %{}}
+    actual = DB.select([:name], from: Test)
+    assert expected == actual
   end
 
-  @tag :db
   test "select with simple where clause" do
-    [elixir | _] = DB.select(from: ProgrammingLanguage, where: %{name: "Elixir"})
-    assert %Document{
-      class: "ProgrammingLanguage",
-      rid: _,
-      version: _,
-      fields: %{"name" => "Elixir"}
-    } = elixir
+    actual = DB.select(from: Test, where: %{name: "Elixir"})
+    assert {"SELECT FROM Test WHERE name = :" <> _, %{}} = actual
   end
 
-  @tag :db
   test "select with two element where clause" do
-    [elixir | _] = DB.select(from: ProgrammingLanguage, where: %{name: "Elixir", type: "Awesome"})
-    assert %Document{
-      class: "ProgrammingLanguage",
-      rid: _,
-      version: _,
-      fields: %{"name" => "Elixir", "type" => "Awesome"}
-    } = elixir
+    {query, params} = DB.select(from: Test, where: %{name: "Elixir", type: "Awesome"})
+    assert query =~ "SELECT"
+    assert query =~ "WHERE"
+    assert query =~ "AND"
+    assert is_map(params)
   end
 
-  @tag :db
   test "select with logical or" do
-    [doc | _] = DB.select(from: ProgrammingLanguage, where: %{name: "Elixir", type: "Awesome"}, logical: "OR")
-    assert %Document{
-      class: "ProgrammingLanguage",
-      rid: _,
-      version: _,
-      fields: _
-    } = doc
+    {query, params} = DB.select(from: Test, where: %{name: "Elixir", type: "Awesome"}, logical: "OR")
+    assert query =~ "SELECT"
+    assert query =~ "WHERE"
+    assert query =~ "OR"
+    assert is_map(params)
   end
 
-  @tag :db
   test "select using a class method" do
-    [lolcode | _] = DB.select(from: ProgrammingLanguage, where: %{"name.toLowerCase()" => "lolcode"})
-    assert %Document{
-      class: "ProgrammingLanguage",
-      rid: _,
-      version: _,
-      fields: %{"name" => "LOLCODE"}
-    } = lolcode
+    {query, params} = DB.select(from: Test, where: %{"name.toLowerCase()" => "lolcode"})
+    assert query =~ "SELECT"
+    assert query =~ "WHERE"
+    assert query =~ "name.toLowerCase()"
+    assert is_map(params)
   end
 
-  @tag :db
   test "select using a class method and custom operator" do
-    [doc | _] = DB.select(from: ProgrammingLanguage, where: {"name.length()", ">", 10})
-    assert doc.fields["name"] > 10
+    {query, _} = DB.select(from: Test, where: {"name.length()", ">", 10})
+    assert query =~ "SELECT"
+    assert query =~ "WHERE"
+    assert query =~ "name.length()"
+    assert query =~ ">"
   end
 
-  @tag :db
   test "select using class methods, custom operators, and a logical or" do
-    [doc | _] = DB.select(from: ProgrammingLanguage,
+    {query, _} = DB.select(from: Test,
                      where: [{"name.length()", ">", 10},
                              {"name.left(2)", "=", "El"}],
                      logical: "OR")
-    assert doc.fields["name"] > 10 or String.starts_with?(doc.fields["name"], "El")
+    assert query =~ "SELECT"
+    assert query =~ "name.length()"
+    assert query =~ ">"
+    assert query =~ "name.left(2)"
+    assert query =~ "="
+    assert query =~ "OR"
   end
 
-  @tag :db
   test "select by rid using shortcut" do
-    [doc | _] = DB.select(from: ProgrammingLanguage)
-    same_doc = DB.rid(doc.rid)
-    assert doc == same_doc
+    {query, _} = DB.rid("#11:7")
+    assert query == "SELECT FROM #11:7"
   end
 
-  @tag :db
   test "use a group by statement" do
-    names = DB.select(from: ProgrammingLanguage, group_by: :name)
-    |> Enum.map(fn(doc) -> doc.fields["name"] end)
-
-    assert names == Enum.dedup(names)
+    {query, _} = DB.select(from: Test, group_by: :name)
+    assert query == "SELECT FROM Test GROUP BY name"
   end
 
-  @tag :db
   test "use a let block" do
-    elixir = DB.select(from: ProgrammingLanguage, let: %{"$n" => :name}, where: %{"$n" => "Elixir"})
-      |> Enum.map(fn(doc) -> doc.fields["name"] end)
-      |> Enum.dedup()
-    assert length(elixir) == 1
-    assert elixir == ["Elixir"]
+    {query, _} = DB.select(from: Test, let: %{"$n" => :name}, where: %{"$n" => "Elixir"})
+    assert query =~ "SELECT"
+    assert query =~ "LET"
+    assert query =~ "$n"
+    assert query =~ "="
+    assert query =~ "name"
+    assert query =~ "WHERE"
   end
 
-  @tag :db
   test "order by something" do
-    names = DB.select(from: ProgrammingLanguage, order_by: :name)
-      |> Enum.map(fn(doc) -> doc.fields["name"] end)
-      |> Enum.dedup()
-
-    assert Enum.at(names, 0) == Enum.sort(names) |> Enum.at(0)
+    {query, _} = DB.select(from: Test, order_by: :name)
+    assert query =~ "SELECT"
+    assert query =~ "ORDER BY"
+    assert query =~ "name"
   end
 
-  @tag :db
   test "unwind" do
-    assert DB.select(from: ProgrammingLanguage, unwind: :name) |> length() > 0
+    {query, _} = DB.select(from: Test, unwind: :name)
+    assert query =~ "SELECT"
+    assert query =~ "UNWIND"
+    assert query =~ "name"
   end
 
-  @tag :db
   test "skip" do
-    [first | _] = DB.select(from: ProgrammingLanguage)
-    [second | _] = DB.select(from: ProgrammingLanguage, skip: 1)
-    assert first.rid != second.rid
+    {query, _} = DB.select(from: Test, skip: 1)
+    assert query =~ "SELECT"
+    assert query =~ "SKIP"
+    assert query =~ "1"
   end
 
-  @tag :db
   test "limit" do
-    assert 1 == DB.select(from: ProgrammingLanguage, limit: 1) |> length()
+     {query, _} = DB.select(from: Test, limit: 1)
+     assert query =~ "SELECT"
+     assert query =~ "LIMIT"
+     assert query =~ "1"
   end
 
-  @tag :db
   test "update rid with set" do
-    %Document{rid: rid} = DB.insert(into: ProgrammingLanguage, set: [name: "Update"])
-    updated = DB.update(rid, set: [name: "Updated"])
-    assert updated == 1
+    {query, _} = DB.update("#11:7", set: [name: "Updated"])
+    assert query =~ "UPDATE"
+    assert query =~ "#11:7"
+    assert query =~ "SET"
   end
 
-  @tag :db
   test "update rid with increment" do
-    %Document{rid: rid} = DB.insert(into: ProgrammingLanguage, set: [number: 0])
-    updated = DB.update(rid, increment: [number: 5])
-    assert updated == 1
+    {query, _} = DB.update("#11:7", increment: [number: 5])
+    assert query =~ "UPDATE"
+    assert query =~ "#11:7"
+    assert query =~ "INCREMENT"
+    assert query =~ "number"
   end
 
-  @tag :db
   test "update rid with add" do
-    %Document{rid: rid} = DB.insert(into: ProgrammingLanguage, content: %{name: "Elixir"})
-    updated = DB.update(rid, add: [type: "Awesome"])
-    assert updated == 1
+    {query, _} = DB.update("#11:7", add: [type: "Awesome"])
+    assert query =~ "UPDATE"
+    assert query =~ "#11:7"
+    assert query =~ "ADD"
+    assert query =~ "type"
   end
 
-  @tag :db
   test "update with remove" do
-    %Document{rid: rid} = DB.insert(into: ProgrammingLanguage, content: %{name: "Elixir", number: 0})
-    updated = DB.update(rid, remove: :number)
-    assert updated == 1
+    {query, _} = DB.update("#11:7", remove: :number)
+    assert query =~ "UPDATE"
+    assert query =~ "#11:7"
+    assert query =~ "REMOVE"
+    assert query =~ "number"
   end
 
-  @tag :db
   test "update with put" do
-    %Document{rid: rid} = DB.insert(into: ProgrammingLanguage, content: %{name: "Elixir"})
-    updated = DB.update(rid, put: [meta: {"type", "awesome"}])
-    assert updated == 1
+    {query, _} = DB.update("#11:7", put: [meta: {"type", "awesome"}])
+    assert query =~ "UPDATE"
+    assert query =~ "#11:7"
+    assert query =~ "PUT"
+    assert query =~ "meta"
   end
 
-  @tag :db
   test "update with content" do
-    %Document{rid: rid} = DB.insert(into: ProgrammingLanguage, content: %{name: "Elixir"})
-    updated = DB.update(rid, content: %{name: "C", type: "Old"})
-    assert updated == 1
+    {query, _} = DB.update("#11:7", content: %{name: "C", type: "Old"})
+    assert query =~ "UPDATE"
+    assert query =~ "#11:7"
+    assert query =~ "CONTENT"
+    assert query =~ "name"
+    assert query =~ "C"
+    assert query =~ "type"
+    assert query =~ "Old"
   end
 
-  @tag :db
   test "update with merge" do
-    %Document{rid: rid} = DB.insert(into: ProgrammingLanguage, content: %{name: "Elixir"})
-    updated = DB.update(rid, merge: %{type: "Awesome"})
-    assert updated == 1
+    {query, _} = DB.update("#11:7", merge: %{type: "Awesome"})
+    assert query =~ "UPDATE"
+    assert query =~ "#11:7"
+    assert query =~ "MERGE"
+    assert query =~ "type"
+    assert query =~ "Awesome"
   end
 
-  @tag :db
   test "upsert and where" do
-    DB.insert(into: ProgrammingLanguage, content: %{name: "upsert-test"})
-    updated = DB.update(ProgrammingLanguage, set: [name: "upsert-testing"], upsert: true, where: %{name: "upsert-test"})
-    assert updated > 0
+    {query, _} = DB.update(Test, set: [name: "upsert-testing"], upsert: true, where: %{name: "upsert-test"})
+    assert query =~ "UPDATE"
+    assert query =~ "SET"
+    assert query =~ "UPSERT"
+    assert query =~ "WHERE"
   end
 
-  @tag :db
   test "update limit" do
-    count = DB.update(ProgrammingLanguage, set: [name: "Elixir"], where: %{name: "Elixir"}, limit: 1)
-    assert count <= 1
+    {query, _} = DB.update(Test, set: [name: "Something"], where: %{name: "Elixir"}, limit: 1)
+    assert query =~ "UPDATE"
+    assert query =~ "Test"
+    assert query =~ "SET"
+    assert query =~ "WHERE"
+    assert query =~ "LIMIT"
+    assert query =~ "1"
   end
 
-  @tag :db
   test "delete by rid" do
-    %Document{rid: rid} = DB.insert(into: ProgrammingLanguage, content: %{name: "Erlang"})
-    count = DB.delete(from: rid)
-    assert count == 1
+    {query, _} = DB.delete(from: "#11:7")
+    assert query == "DELETE FROM #11:7"
   end
 
-  @tag :db
   test "delete with where" do
-    DB.insert(into: ProgrammingLanguage, content: %{name: "JavaScript"})
-    count = DB.delete(from: ProgrammingLanguage, where: %{name: "JavaScript"})
-    assert count > 0
+    {query, _} = DB.delete(from: Test, where: %{name: "JavaScript"})
+    assert query =~ "DELETE"
+    assert query =~ "FROM"
+    assert query =~ "Test"
+    assert query =~ "WHERE"
   end
 
-  @tag :db
   test "truncate class" do
-    DB.create(class: TruncateTest)
-    assert nil != DB.truncate(class: TruncateTest)
-    DB.drop(class: TruncateTest)
+    {query, _} = DB.truncate(class: Test)
+    assert query == "TRUNCATE CLASS Test"
   end
 
-  @tag :db
   test "truncate cluster" do
-    DB.command("CREATE CLUSTER Germany")
-    assert nil != DB.truncate(cluster: "Germany")
-    DB.command("DROP CLUSTER Germany")
+    {query, _} = DB.truncate(cluster: "East")
+    assert query == "TRUNCATE CLUSTER East"
   end
 
-  @tag :db
   test "truncate record" do
-    %Document{rid: rid} = DB.insert(into: ProgrammingLanguage, content: %{name: "JavaScript"})
-    assert nil != DB.truncate(record: rid)
-    DB.delete(from: rid)
+    {query, _} = DB.truncate(record: "#11:7")
+    assert query == "TRUNCATE RECORD [#11:7]"
   end
 end

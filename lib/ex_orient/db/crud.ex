@@ -3,30 +3,31 @@ defmodule ExOrient.DB.CRUD do
   Provides CRUD commands
   """
 
-  alias ExOrient.DB
   alias ExOrient.QueryBuilder, as: QB
 
   @doc """
   Perform a select operation. Examples:
 
-      > ExOrient.DB.select(from: ProgrammingLanguage)
+      ExOrient.DB.select(from: ProgrammingLanguage)
 
-      > ExOrient.DB.select([:name], from: {ProgrammingLanguage})
+      ExOrient.DB.select([:name], from: {ProgrammingLanguage})
 
-      > ExOrient.DB.select(from: ProgrammingLanguage, where: %{name: "Elixir"})
+      ExOrient.DB.select(from: ProgrammingLanguage, where: %{name: "Elixir"})
 
-      > ExOrient.DB.select(from: ProgrammingLanguage, where: %{name: "Elixir", type: "Awesome"})
+      ExOrient.DB.select(from: ProgrammingLanguage, where: %{name: "Elixir", type: "Awesome"})
 
-      > ExOrient.DB.select(from: ProgrammingLanguage, where: %{name: "Elixir", type: "Awesome"}, logical: "OR")
+      ExOrient.DB.select(from: ProgrammingLanguage, where: %{name: "Elixir", type: "Awesome"}, logical: :or)
 
-      > ExOrient.DB.select(from: ProgrammingLanguage, where: %{"name.toLowerCase()" => "lolcode"})
+      ExOrient.DB.select(from: ProgrammingLanguage, where: [name: "Elixir", name: "Erlang"], logical: :or)
 
-      > ExOrient.DB.select(from: ProgrammingLanguage, where: {"name.length()", ">", 10})
+      ExOrient.DB.select(from: ProgrammingLanguage, where: %{"name.toLowerCase()" => "lolcode"})
 
-      > ExOrient.DB.select(from: ProgrammingLanguage,
-                       where: [{"name.length()", ">", 10},
-                               {"name.left(2)", "=", "El"}],
-                       logical: "OR")
+      ExOrient.DB.select(from: ProgrammingLanguage, where: {"name.length()", ">", 10})
+
+      ExOrient.DB.select(from: ProgrammingLanguage,
+                         where: [{"name.length()", ">", 10},
+                                 {"name.left(2)", "=", "El"}],
+                         logical: :or)
 
   """
   def select(fields \\ [], opts) do
@@ -40,7 +41,8 @@ defmodule ExOrient.DB.CRUD do
       |> Keyword.get(:from)
       |> QB.class_name()
 
-    query = "SELECT #{fields} FROM #{from}"
+    query = "SELECT #{fields}" |> String.rstrip()
+    query = query <> " FROM #{from}"
 
     {query, params} =
       opts
@@ -102,40 +104,33 @@ defmodule ExOrient.DB.CRUD do
       |> Keyword.get(:nocache)
       |> QB.append_nocache(query, params)
 
-    DB.command(query, params: params)
+    {query, params}
   end
 
   @doc """
   Shortcut function to easily select by Record ID. Takes a string or
   a %MarcoPolo.Rid{}.
 
-      > ExOrient.DB.rid("#9:0")
-      %MarcoPolo.Document{}
+      ExOrient.DB.rid("#9:0")
 
-      > ExOrient.DB.rid(%MarcoPolo.RID{cluster_id: 9, position: 0})
-      %MarcoPolo.Document{}
+      ExOrient.DB.rid(%MarcoPolo.RID{cluster_id: 9, position: 0})
 
   """
   def rid(%MarcoPolo.RID{cluster_id: cid, position: pos}), do: rid("##{cid}:#{pos}")
   def rid(rid) do
-    [doc | _] = select(from: rid)
-    doc
+    select(from: rid)
   end
 
   @doc """
   Insert into the database. Compatible with various styles of syntax. Examples:
 
-      > ExOrient.DB.insert(into: ProgrammingLanguage, values: {[:name], ["Elixir"]})
-      %MarcoPolo.Document{class: "ProgrammingLanguage", fields: %{"name" => "Elixir"}, rid: _, version: _}
+      ExOrient.DB.insert(into: ProgrammingLanguage, values: {[:name], ["Elixir"]})
 
-      > ExOrient.DB.insert(into: ProgrammingLanguage, set: [name: "Elixir"])
-      %MarcoPolo.Document{class: "ProgrammingLanguage", fields: %{"name" => "Elixir"}, rid: _, version: _}
+      ExOrient.DB.insert(into: ProgrammingLanguage, set: [name: "Elixir"])
 
-      > ExOrient.DB.insert(into: ProgrammingLanguage, content: %{name: "Elixir"})
-      %MarcoPolo.Document{class: "ProgrammingLanguage", fields: %{"name" => "Elixir"}, rid: _, version: _}
+      ExOrient.DB.insert(into: ProgrammingLanguage, content: %{name: "Elixir"})
 
-      > ExOrient.DB.insert(into: ProgrammingLanguage, content: %{name: "Elixir"}, return: "@rid")
-      [9, 224]
+      ExOrient.DB.insert(into: ProgrammingLanguage, content: %{name: "Elixir"}, return: "@rid")
 
   """
   def insert(opts) do
@@ -171,23 +166,19 @@ defmodule ExOrient.DB.CRUD do
       |> Keyword.get(:from)
       |> QB.append_from(query, params)
 
-    DB.command(query, params: params)
+    {query, params}
   end
 
   @doc """
   Perform an update command. Examples:
 
-      > ExOrient.DB.update("#9:568", set: [name: "C"])
-      1
+      ExOrient.DB.update("#9:568", set: [name: "C"])
 
-      > ExOrient.DB.update(ProgrammingLanguage, where: %{name: "C"}, merge: %{type: ["Old", "Fast"]}, return: :after)
-      [%MarcoPolo.Document{class: "ProgrammingLanguage", fields: %{"name" => "C", "type" => ["Old", "Fast"]}, _, version: _}, ...]
+      ExOrient.DB.update(ProgrammingLanguage, where: %{name: "C"}, merge: %{type: ["Old", "Fast"]}, return: :after)
 
-      > ExOrient.DB.update("#9:568", remove: [type: "Old"])
-      1
+      ExOrient.DB.update("#9:568", remove: [type: "Old"])
 
-      > ExOrient.DB.update(Person, set: [name: "Bob"], where: %{name: "Bob"}, upsert: true, return: :after)
-      [%MarcoPolo.Document{class: "Person", fields: %{"name" => "Bob"}, rid: _, version: _}]
+      ExOrient.DB.update(Person, set: [name: "Bob"], where: %{name: "Bob"}, upsert: true, return: :after)
 
   """
   def update(obj, opts \\ [])
@@ -262,15 +253,15 @@ defmodule ExOrient.DB.CRUD do
       |> Keyword.get(:timeout)
       |> QB.append_timeout(query, params)
 
-    DB.command(query, params: params)
+    {query, params}
   end
 
   @doc """
   Run a delete command. Examples:
 
-      > DB.delete(from: "#10:0")
+      DB.delete(from: "#10:0")
 
-      > DB.delete(from: ProgrammingLanguage)
+      DB.delete(from: ProgrammingLanguage)
 
   """
   def delete(opts \\ []) do
@@ -306,7 +297,7 @@ defmodule ExOrient.DB.CRUD do
       |> Keyword.get(:timeout)
       |> QB.append_timeout(query, params)
 
-    DB.command(query, params: params)
+    {query, params}
   end
 
   @doc """
@@ -324,7 +315,7 @@ defmodule ExOrient.DB.CRUD do
   @doc """
   Truncate a class
 
-      > ExOrient.DB.truncate(class: Person)
+      ExOrient.DB.truncate(class: Person)
 
   """
   def truncate_class(opts \\ []) do
@@ -341,27 +332,27 @@ defmodule ExOrient.DB.CRUD do
       |> Keyword.get(:unsafe)
       |> QB.append_unsafe(query, params)
 
-    DB.command(query)
+    {query, params}
   end
 
   @doc """
   Truncate a cluster
 
-      > ExOrient.DB.truncate(cluster: "Germany")
+      ExOrient.DB.truncate(cluster: "Germany")
 
   """
   def truncate_cluster(opts \\ []) do
     name = Keyword.get(opts, :cluster)
     query = "TRUNCATE CLUSTER #{name}"
-    DB.command(query)
+    {query, %{}}
   end
 
   @doc """
   Truncate a record
 
-      > ExOrient.DB.truncate(record: "#11:2")
+      ExOrient.DB.truncate(record: "#11:2")
 
-      > ExOrient.DB.truncate(record: ["#11:2", "#11:3"])
+      ExOrient.DB.truncate(record: ["#11:2", "#11:3"])
 
   """
   def truncate_record(opts \\ []) do
@@ -374,6 +365,6 @@ defmodule ExOrient.DB.CRUD do
       |> QB.wrap_in_square_brackets()
 
     query = "TRUNCATE RECORD #{rids}"
-    DB.command(query)
+    {query, %{}}
   end
 end

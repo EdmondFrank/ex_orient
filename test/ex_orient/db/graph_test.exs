@@ -1,31 +1,24 @@
 defmodule ExOrient.DB.GraphTest do
   use ExUnit.Case
-  alias MarcoPolo.Document
   alias ExOrient.DB
 
-  @tag :db
   test "create a vertex" do
-    assert %Document{class: "V", fields: %{"message" => "hello"}} = DB.create(vertex: "V", content: %{message: "hello"})
+    {query, _} = DB.create(vertex: "V", content: %{message: "hello"})
+    assert query == "CREATE VERTEX V CONTENT {\"message\":\"hello\"}"
   end
 
-  @tag :db
   test "create an edge" do
-    a = DB.create(vertex: "V")
-    b = DB.create(vertex: "V")
-    assert [%Document{class: "E", fields: %{"in" => _, "out" => _}}] = DB.create(edge: "E", from: a.rid, to: b.rid)
+    {query, _} = DB.create(edge: "E", from: "#11:7", to: "#11:8")
+    assert query == "CREATE EDGE E FROM #11:7 TO #11:8"
   end
 
-  @tag :db
   test "delete a vertex" do
-    a = DB.create(vertex: "V")
-    assert 1 == DB.delete(vertex: a.rid)
+    {query, _} = DB.delete(vertex: "#11:7")
+    assert query == "DELETE VERTEX #11:7"
   end
 
-  @tag :db
   test "delete an edge" do
-    a = DB.create(vertex: "V")
-    b = DB.create(vertex: "V")
-    [edge] = DB.create(edge: "E", from: a.rid, to: b.rid)
-    assert 1 == DB.delete(edge: edge.rid)
+    {query, _} = DB.delete(edge: "#11:7")
+    assert query == "DELETE EDGE #11:7"
   end
 end

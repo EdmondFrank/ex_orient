@@ -3,14 +3,12 @@ defmodule ExOrient.DB.Indexes do
 
   """
 
-  alias ExOrient.DB
   alias ExOrient.QueryBuilder, as: QB
 
   @doc """
   Create a new index.
 
-      > ExOrient.DB.create(index: "name", on: "Movie (title)", index_type: :unique, key_type: :string)
-      0
+      ExOrient.DB.create(index: "name", on: "Movie (title)", index_type: :unique, key_type: :string)
 
   """
   def create(opts \\ []) do
@@ -38,30 +36,30 @@ defmodule ExOrient.DB.Indexes do
       |> Keyword.get(:metadata)
       |> QB.append_metadata(query, params)
 
-    DB.command(query, params: params)
+    {query, params}
   end
 
   @doc """
   Rebuild an index by name
 
-      > ExOrient.DB.rebuild(index: "name")
+      ExOrient.DB.rebuild(index: "name")
 
   """
   def rebuild(opts \\ []) do
     name = Keyword.get(opts, :index)
     query = "REBUILD INDEX #{name}"
-    DB.command(query)
+    {query, %{}}
   end
 
   @doc """
   Drop an index by name or property
 
-      > ExOrient.DB.drop(index: "name")
+      ExOrient.DB.drop(index: "name")
 
   """
   def drop(opts \\ []) do
     name = Keyword.get(opts, :index)
     query = "DROP INDEX #{name}"
-    DB.command(query)
+    {query, %{}}
   end
 end
