@@ -8,7 +8,7 @@ An OrientDB query builder providing a nicer syntax to Orient SQL and uses
   1. Add ex_orient to your list of dependencies in `mix.exs`:
     ```elixir
     def deps do
-      [{:ex_orient, "~> 0.1.0"}]
+      [{:ex_orient, "~> 1.0.0"}]
     end
     ```
 
