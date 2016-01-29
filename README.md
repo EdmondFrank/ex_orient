@@ -30,7 +30,9 @@ config :ex_orient,
   pool_max_overflow: 10,
   user: "admin",
   password: "admin",
-  connection: {:db, "GratefulDeadConcerts", :document}
+  connection: {:db, "GratefulDeadConcerts", :document},
+  host: "localhost",
+  port: 2424
 ```
 
 Adjust the values to fit your needs.

@@ -19,7 +19,12 @@ defmodule ExOrient.Mixfile do
   def application do
     [
       mod: {ExOrient, []},
-      applications: [:logger]
+      applications: [
+        :logger,
+        :marco_polo,
+        :poison,
+        :poolboy
+      ]
     ]
   end
 
@@ -34,11 +39,11 @@ defmodule ExOrient.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
+      {:earmark, "~> 0.1", only: :dev},
+      {:ex_doc, "~> 0.11", only: :dev},
       {:marco_polo, "~> 0.1"},
       {:poison, "~> 1.5 or ~> 2.0"},
-      {:poolboy, "~> 1.5 or ~> 1.4"},
-      {:earmark, "~> 0.1", only: :dev},
-      {:ex_doc, "~> 0.11", only: :dev}
+      {:poolboy, "~> 1.5 or ~> 1.4"}
     ]
   end
 
