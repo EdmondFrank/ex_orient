@@ -388,7 +388,7 @@ defmodule ExOrient.QueryBuilder do
       iex> ExOrient.QueryBuilder.append_from("#10:0", "CREATE EDGE Watched", %{})
       {"CREATE EDGE Watched FROM #10:0", %{}}
 
-      iex> ExOrient.QueryBuilder.append_from("SELECT FROM account", "CREATE EDGE Watched", %{})
+      iex> ExOrient.QueryBuilder.append_from("(SELECT FROM account)", "CREATE EDGE Watched", %{})
       {"CREATE EDGE Watched FROM (SELECT FROM account)", %{}}
 
   """
@@ -406,8 +406,8 @@ defmodule ExOrient.QueryBuilder do
     {query <> " FROM #{rid}", params}
   end
 
-  def append_from(subquery, query, params) do
-    {query <> " FROM (#{subquery})", params}
+  def append_from(class, query, params) do
+    {query <> " FROM #{class_name(class)}", params}
   end
 
   @doc """

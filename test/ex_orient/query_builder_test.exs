@@ -100,7 +100,7 @@ defmodule ExOrient.QueryBuilderTest do
   end
 
   test "append from" do
-    assert {"INSERT INTO Test FROM (SELECT FROM Test)", %{}} = QueryBuilder.append_from("SELECT FROM Test", "INSERT INTO Test", %{})
+    assert {"INSERT INTO Test FROM (SELECT FROM Test)", %{}} = QueryBuilder.append_from("(SELECT FROM Test)", "INSERT INTO Test", %{})
   end
 
   test "append increment" do

@@ -5,6 +5,7 @@ defmodule ExOrient.DBTest do
 
   use ExUnit.Case
   alias ExOrient.DB
+  import ExOrient.Functions
 
   @tag :db
   test "create a graph" do
@@ -20,7 +21,7 @@ defmodule ExOrient.DBTest do
     to = DB.select(from: "ExOrientDBTest", where: [name: "test"])
     DB.create(edge: "exorient_member_of", from: from, to: to) |> DB.exec()
 
-    {:ok, docs} = DB.select(["expand(in('exorient_member_of'))"], from: "ExOrientDBTest") |> DB.exec()
+    {:ok, docs} = DB.select("exorient_member_of" |> o_in() |> expand(), from: "ExOrientDBTest") |> DB.exec()
     assert length(docs) == 2
 
     first = hd(docs)
