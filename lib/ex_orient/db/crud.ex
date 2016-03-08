@@ -38,18 +38,17 @@ defmodule ExOrient.DB.CRUD do
       |> Enum.map(&to_string/1)
       |> Enum.join(", ")
 
-    from =
+    query = "SELECT #{fields}" |> String.rstrip()
+
+    {query, params} =
       opts
       |> Keyword.get(:from)
-      |> QB.class_name()
-
-    query = "SELECT #{fields}" |> String.rstrip()
-    query = query <> " FROM #{from}"
+      |> QB.append_from(query, %{})
 
     {query, params} =
       opts
       |> Keyword.get(:let)
-      |> QB.append_let(query, %{})
+      |> QB.append_let(query, params)
 
     {query, params} =
       opts
