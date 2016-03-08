@@ -6,6 +6,8 @@ defmodule ExOrient.Supervisor do
   end
 
   def init(:ok) do
+    :random.seed()
+
     pool_options = [
       name: {:local, :marco_polo},
       worker_module: MarcoPolo,
