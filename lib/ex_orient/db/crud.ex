@@ -30,7 +30,9 @@ defmodule ExOrient.DB.CRUD do
                          logical: :or)
 
   """
-  def select(fields \\ [], opts) do
+  def select(opts), do: select([], opts)
+  def select(field, opts) when not is_list(field), do: select([field], opts)
+  def select(fields, opts) do
     fields =
       fields
       |> Enum.map(&to_string/1)
