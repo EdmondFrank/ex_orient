@@ -29,7 +29,6 @@ defmodule ExOrient.DB do
       case MarcoPolo.command(worker, query, params: params) do
         {:ok, %{response: response}} -> {:ok, response}
         {:error, error} -> {:error, error}
-        _ -> {:error, "Something went badly wrong."}
       end
     end)
   end
@@ -38,6 +37,23 @@ defmodule ExOrient.DB do
   An alias for command/1
   """
   def exec({query, params}), do: command(query, params: params)
+
+  @doc """
+  Execute a server-side script. `type` can be either `"SQL"` or `"Javascript"`. `str` is the
+  string of the script you want to run. Example:
+
+      DB.script("SQL", "begin; let v = create vertex V set name = 'test'; commit; return $v")
+      {:ok, %MarcoPolo.Document{fields: %{"name" => "test"}}}
+
+  """
+  def script(type, str) do
+    :poolboy.transaction(:marco_polo, fn(worker) ->
+      case MarcoPolo.script(worker, type, str) do
+        {:ok, %{response: response}} -> {:ok, response}
+        {:error, error} -> {:error, error}
+      end
+    end)
+  end
 
   defdelegate select(field), to: CRUD
   defdelegate select(field, opts), to: CRUD
