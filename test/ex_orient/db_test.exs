@@ -31,4 +31,15 @@ defmodule ExOrient.DBTest do
     DB.drop(class: "ExOrientDBTest2", unsafe: true) |> DB.exec()
     DB.drop(class: "exorient_member_of", unsafe: true) |> DB.exec()
   end
+
+  @tag :db
+  test "run a script" do
+    assert {:ok, %MarcoPolo.Document{}} = DB.script("SQL", """
+    begin
+    let v = create vertex V set name = 'test'
+    delete vertex V where name = 'test'
+    commit
+    return $v
+    """)
+  end
 end
