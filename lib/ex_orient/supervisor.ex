@@ -1,4 +1,8 @@
 defmodule ExOrient.Supervisor do
+  @moduledoc """
+  Starts the pool of MarcoPolo connections
+  """
+
   use Supervisor
 
   def start_link do
