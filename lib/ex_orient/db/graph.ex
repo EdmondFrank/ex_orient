@@ -119,6 +119,16 @@ defmodule ExOrient.DB.Graph do
 
     {query, params} =
       opts
+      |> Keyword.get(:from)
+      |> QB.append_from(query, params)
+
+    {query, params} =
+      opts
+      |> Keyword.get(:to)
+      |> QB.append_to(query, params)
+
+    {query, params} =
+      opts
       |> Keyword.get(:where)
       |> QB.append_where(query, params)
 
