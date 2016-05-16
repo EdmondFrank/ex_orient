@@ -3,7 +3,7 @@ defmodule ExOrient.Mixfile do
 
   def project do
     [app: :ex_orient,
-     version: "1.2.1",
+     version: "1.3.0",
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
