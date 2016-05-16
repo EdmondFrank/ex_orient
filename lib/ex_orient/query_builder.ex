@@ -344,6 +344,7 @@ defmodule ExOrient.QueryBuilder do
     sets =
       kv
       |> Enum.map(fn
+        ({key, {:binary, _}}) -> "#{key} = :set_#{key}"
         ({key, {q, p}}) -> "#{key} = (#{combine_params(q, p)})"
         ({key, _val}) -> "#{key} = :set_#{key}"
       end)
