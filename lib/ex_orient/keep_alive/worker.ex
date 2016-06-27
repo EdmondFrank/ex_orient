@@ -14,7 +14,11 @@ defmodule ExOrient.KeepAlive.Worker do
   end
 
   def handle_info(:keep_alive, state) do
-    DB.select(from: "OUser", limit: 1) |> DB.exec()
+    :marco_polo
+    |> GenServer.call(:get_all_workers)
+    |> Enum.each(fn({_, pid, _, _}) ->
+      MarcoPolo.command(pid, "SELECT FROM OUser LIMIT 1")
+    end)
 
     Process.send_after(self, :keep_alive, @interval)
     {:noreply, state}
