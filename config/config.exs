@@ -36,4 +36,5 @@ config :ex_orient,
   password: "admin",
   connection: {:db, "GratefulDeadConcerts", :document},
   host: "localhost",
-  port: 2424
+  port: 2424,
+  keep_alive: false
