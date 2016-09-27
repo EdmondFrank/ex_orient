@@ -16,7 +16,8 @@ defmodule ExOrient.Supervisor do
       name: {:local, :marco_polo},
       worker_module: MarcoPolo,
       size: pool_size(),
-      max_overflow: pool_max_overflow()
+      max_overflow: pool_max_overflow(),
+      strategy: :fifo
     ]
 
     args = [
