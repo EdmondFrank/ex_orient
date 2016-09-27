@@ -34,7 +34,7 @@ config :ex_orient,
   pool_max_overflow: 10,
   user: "root",
   password: "admin",
-  connection: {:db, "exorient"},
+  connection: {:db, "exorient", :graph},
   host: "orient",
   port: 2424,
   keep_alive: false
