@@ -10,7 +10,7 @@ defmodule ExOrient.Supervisor do
   end
 
   def init(:ok) do
-    :random.seed()
+    :rand.seed_s(:exsplus)
 
     pool_options = [
       name: {:local, :marco_polo},

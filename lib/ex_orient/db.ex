@@ -22,13 +22,17 @@ defmodule ExOrient.DB do
       ExOrient.DB.command("SELECT FROM ProgrammingLanguage WHERE name = :name", params: %{name: "Elixir"})
 
   """
-  def command({query, params}), do: command(query, params: params)
-  def command(query), do: command(query, params: [])
-  def command(query, params: params) do
+  def command(query, opts \\ []) do
     :poolboy.transaction(:marco_polo, fn(worker) ->
-      case MarcoPolo.command(worker, query, params: params) do
-        {:ok, %{response: response}} -> {:ok, response}
-        {:error, error} -> {:error, error}
+      try do
+        case MarcoPolo.command(worker, query, opts) do
+          {:ok, %{response: response}} -> {:ok, response}
+          {:error, error} -> {:error, error}
+        end
+      catch
+        :exit, {:timeout, _} ->
+          GenServer.stop(worker, :timeout, 5_000)
+          raise "Database query timeout"
       end
     end)
   end
@@ -36,7 +40,7 @@ defmodule ExOrient.DB do
   @doc """
   An alias for command/1
   """
-  def exec({query, params}), do: command(query, params: params)
+  def exec({query, params}, opts \\ []), do: command(query, [params: params] ++ opts)
 
   @doc """
   Execute a server-side script. `type` can be either `"SQL"` or `"Javascript"`. `str` is the
@@ -46,11 +50,17 @@ defmodule ExOrient.DB do
       {:ok, %MarcoPolo.Document{fields: %{"name" => "test"}}}
 
   """
-  def script(type, str) do
+  def script(type, str, opts \\ []) do
     :poolboy.transaction(:marco_polo, fn(worker) ->
-      case MarcoPolo.script(worker, type, str) do
-        {:ok, %{response: response}} -> {:ok, response}
-        {:error, error} -> {:error, error}
+      try do
+        case MarcoPolo.script(worker, type, str, opts) do
+          {:ok, %{response: response}} -> {:ok, response}
+          {:error, error} -> {:error, error}
+        end
+      catch
+        :exit, {:timeout, _} ->
+          GenServer.stop(worker, :timeout, 5_000)
+          raise "Database script timeout"
       end
     end)
   end

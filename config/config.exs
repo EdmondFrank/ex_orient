@@ -32,9 +32,9 @@ use Mix.Config
 config :ex_orient,
   pool_size: 5,
   pool_max_overflow: 10,
-  user: "admin",
+  user: "root",
   password: "admin",
-  connection: {:db, "GratefulDeadConcerts", :document},
-  host: "localhost",
+  connection: {:db, "exorient"},
+  host: "orient",
   port: 2424,
   keep_alive: false

@@ -132,7 +132,7 @@ defmodule ExOrient.QueryBuilder do
     # {"name = :where_name_0", "where_name_0", "Paul"}
     clauses_keys_vals =
       clauses
-      |> Enum.with_index(:random.uniform * 1000 |> round())
+      |> Enum.with_index(:rand.uniform * 1000 |> round())
       |> Enum.map(fn({{key, oper, value}, index}) ->
         case key do
           "@" <> rec_attr -> {"#{key} #{oper} :where_#{rec_attr}_#{index}", "where_#{rec_attr}_#{index}", value}

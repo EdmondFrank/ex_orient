@@ -42,7 +42,7 @@ defmodule ExOrient.Mixfile do
     [
       {:earmark, "~> 0.1", only: :dev},
       {:ex_doc, "~> 0.11", only: :dev},
-      {:marco_polo, "~> 0.1"},
+      {:marco_polo, github: "MyMedsAndMe/marco_polo"},
       {:poison, "~> 1.5 or ~> 2.0"},
       {:poolboy, "~> 1.5 or ~> 1.4"}
     ]

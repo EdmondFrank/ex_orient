@@ -1,0 +1,17 @@
+orient:
+  image: orientdb:2.2.10
+  ports:
+    - 2424:2424
+    - 2480:2480
+  environment:
+    ORIENTDB_ROOT_PASSWORD: admin
+  volumes:
+    - ./ci/config:/orientdb/config
+    - ./ci/databases:/orientdb/databases
+
+ex_orient:
+  build: .
+  volumes:
+    - ./:/ex_orient
+  links:
+    - orient:orient

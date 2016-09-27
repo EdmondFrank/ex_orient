@@ -1,6 +1,5 @@
 defmodule ExOrient.KeepAlive.Worker do
   use GenServer
-  alias ExOrient.DB
 
   @interval 60 * 1000
 
