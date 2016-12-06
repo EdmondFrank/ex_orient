@@ -95,6 +95,11 @@ defmodule ExOrient.QueryBuilderTest do
             QueryBuilder.append_set([foo_binary: {:binary, "hello"}, bar: "world"], "INSERT INTO Test", %{})
   end
 
+  test "append set with custom tagged number values" do
+    assert {"INSERT INTO Test SET foo = :set_foo, bar = :set_bar", %{"set_foo" => {:long, 9999999999}, "set_bar" => {:short, 9999}}} =
+            QueryBuilder.append_set([foo: {:long, 9999999999}, bar: {:short, 9999}], "INSERT INTO Test", %{})
+  end
+
   test "append content" do
     assert {"INSERT INTO Test CONTENT {\"foo\":\"hello\",\"bar\":\"world\"}", %{}} =
             QueryBuilder.append_content(%{foo: "hello", bar: "world"}, "INSERT INTO Test", %{})
