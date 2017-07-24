@@ -3,14 +3,14 @@ defmodule ExOrient.Mixfile do
 
   def project do
     [app: :ex_orient,
-     version: "1.5.1",
+     version: "1.5.2",
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     description: description,
-     package: package,
-     deps: deps,
-     docs: docs]
+     description: description(),
+     package: package(),
+     deps: deps(),
+     docs: docs()]
   end
 
   # Configuration for the OTP application

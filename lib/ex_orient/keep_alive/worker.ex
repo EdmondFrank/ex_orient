@@ -8,7 +8,7 @@ defmodule ExOrient.KeepAlive.Worker do
   end
 
   def init(state) do
-    Process.send_after(self, :keep_alive, @interval)
+    Process.send_after(self(), :keep_alive, @interval)
     {:ok, state}
   end
 
@@ -19,7 +19,7 @@ defmodule ExOrient.KeepAlive.Worker do
       MarcoPolo.command(pid, "SELECT FROM OUser LIMIT 1")
     end)
 
-    Process.send_after(self, :keep_alive, @interval)
+    Process.send_after(self(), :keep_alive, @interval)
     {:noreply, state}
   end
 end
