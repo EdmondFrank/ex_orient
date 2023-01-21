@@ -38,7 +38,7 @@ defmodule ExOrient.DB.CRUD do
       |> Enum.map(&to_string/1)
       |> Enum.join(", ")
 
-    query = "SELECT #{fields}" |> String.rstrip()
+    query = "SELECT #{fields}" |> String.trim_trailing()
 
     {query, params} =
       opts
